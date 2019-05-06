@@ -66,11 +66,13 @@ void t_shutdown(){ //shutdown thread library by freeing all allocated memory
     free(cur);
   }
   free(ready);
+  free(running->thread_context);
   free(running);
 }
 
 void t_terminate(){ //terminate calling thread
   tcb *tmp = running;
+  free(tmp->thread_context->uc_stack.ss_sp);
   free(tmp->thread_context);
   free(tmp);
   running = dequeue(ready);
@@ -112,6 +114,7 @@ tcb *dequeue(t_queue * queue){ //dequeue first node in queue
   return tmp;
 }
 
+/*
 void printList(t_queue *queue){ //print thread library list
   printf("Thread currently runing: %d\n", running->thread_id);
   if (queue){ //check if queue is empty before printing
@@ -126,3 +129,4 @@ void printList(t_queue *queue){ //print thread library list
     printf("queue is empty\n");
   }
 }
+*/

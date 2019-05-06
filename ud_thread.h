@@ -11,4 +11,3 @@ void t_shutdown();
 void t_terminate();
 void enqueue(t_queue *queue, tcb *node);
 tcb *dequeue(t_queue *queue);
-void printList(t_queue *queue);
