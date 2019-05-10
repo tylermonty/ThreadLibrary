@@ -115,14 +115,22 @@ int sem_init(sem_t **sp, int sem_count){
 
 void sem_wait(sem_t *sp){
 	sp->count -= 1;
-	//while(sp->count < 0)
-		
+	enqueue(sp->q, running);
+	while(sp->count < 0);
 }
 
 void sem_signal(sem_t *sp){
 	sp->count += 1;
-	//dequeue(sp->q);
+	dequeue(&(sp->q));
 }
+
+void sem_destroy(sem_t **sp){
+	while((*sp)->q->next){
+		(*sp)->q = (*sp)->q->next;
+	}
+	free(*sp);
+}
+
 /*
 void printList(t_queue *queue){ //print thread library list
   printf("Thread currently runing: %d\n", running->thread_id);
