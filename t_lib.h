@@ -14,7 +14,7 @@ struct tcb{
 };
 typedef struct tcb tcb;
 
-struct t_queue{
-  tcb *head;
-};
-typedef struct t_queue t_queue;
+typedef struct {
+	int count;
+	tcb *q;
+} sem_t;
