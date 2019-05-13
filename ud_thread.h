@@ -9,7 +9,7 @@ void t_create(void(*function)(int), int thread_id, int priority);
 void t_yield(void);
 void t_shutdown();
 void t_terminate();
-tcb *enqueue(tcb *queue, tcb *node);
+tcb *enqueue(tcb **queue, tcb *node);
 tcb *dequeue(tcb **queue);
 int sem_init(sem_t **sp, int sem_count);
 void sem_wait(sem_t *sp);

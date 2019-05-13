@@ -11,10 +11,12 @@ struct tcb{
     int thread_priority;
 	  ucontext_t *thread_context;
 	  struct tcb *next;
+		struct sem_t *s;
 };
 typedef struct tcb tcb;
 
-typedef struct {
+struct sem_t{
 	int count;
-	tcb *q;
-} sem_t;
+	struct tcb *q;
+};
+typedef struct sem_t sem_t;

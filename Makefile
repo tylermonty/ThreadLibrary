@@ -5,17 +5,17 @@ CFLAGS = -g
 
 LIBOBJS = t_lib.o
 
-TSTOBJS = test00.o, test01.o, test01x.o
+TSTOBJS = test00.o, test01.o, test01x.o, test03.o, test10.o, 3test.o, philosophers.o
 
 # specify the executable
 
-EXECS = test00, test01, test01x, test03
+EXECS = test00, test01, test01x, test03, test10, 3test, philosophers
 
 # specify the source files
 
 LIBSRCS = t_lib.c
 
-TSTSRCS = test00.c, test01.c, test01x.c, test03.c
+TSTSRCS = test00.c, test01.c, test01x.c, test03.c, test10.c, 3test.c, philosophers.c
 
 # ar creates the static thread library
 
@@ -51,6 +51,24 @@ test03.o: test03.c ud_thread.h Makefile
 
 test03: test03.o t_lib.a Makefile
 	${CC} ${CFLAGS} test03.o t_lib.a -o test03
+
+test10.o: test10.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c test10.c
+
+test10: test10.o t_lib.a Makefile
+	${CC} ${CFLAGS} test10.o t_lib.a -o test10
+
+3test.o: 3test.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c 3test.c
+
+3test: 3test.o t_lib.a Makefile
+	${CC} ${CFLAGS} 3test.o t_lib.a -o 3test
+
+philosophers.o: philosophers.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c philosophers.c
+
+philosophers: philosophers.o t_lib.a Makefile
+	${CC} ${CFLAGS} philosophers.o t_lib.a -o philosophers
 
 clean:
 	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS}
