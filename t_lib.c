@@ -153,13 +153,14 @@ void sem_destroy(sem_t **sp){
   tcb* cur = (*sp)->q;
 	while(cur){
     tmp = cur->next;
-    free(cur->thread_context->uc_stack.ss_sp);
-    free(cur->thread_context);
-    free(cur);
+    //free(cur->thread_context->uc_stack.ss_sp);
+    //free(cur->thread_context);
+    //free(cur);
+	enqueue(&ready, cur);
     cur = tmp;
 	}
   free((*sp)->q);
-	free(*sp);
+  free(*sp);
 }
 
 /*
