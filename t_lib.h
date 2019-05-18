@@ -20,3 +20,18 @@ struct sem_t{
 	struct tcb *q;
 };
 typedef struct sem_t sem_t;
+
+//mailbox
+struct messageNode{
+	char *message;
+	int len;
+	int sender; //TID of sender thread
+	int receiver; //TID of receiver thread
+	struct messageNode *next;
+};
+typedef struct messageNode messageNode;
+
+typedef struct {
+	messageNode *msg;
+	sem_t *mbox_sem;
+} mbox;

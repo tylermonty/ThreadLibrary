@@ -11,7 +11,18 @@ void t_shutdown();
 void t_terminate();
 tcb *enqueue(tcb **queue, tcb *node);
 tcb *dequeue(tcb **queue);
+
 int sem_init(sem_t **sp, int sem_count);
 void sem_wait(sem_t *sp);
 void sem_signal(sem_t *sp);
 void sem_destroy(sem_t **sp);
+
+//mailbox functions
+int mbox_create(mbox **mb);
+void mbox_destroy(mbox **mb);
+void mbox_deposit(mbox *mb, char *msg, int len);
+void mbox_withdraw(mbox *mb, char *msg, int *len);
+
+//message functions
+void send(int tid, char *msg, int len);
+void receive(int *tid, char *msg, int *len);
