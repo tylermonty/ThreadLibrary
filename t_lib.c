@@ -1,7 +1,7 @@
 //#include "t_lib.h"
 #include "ud_thread.h"
 #include "signal.h"
-
+#include <string.h>
 #define _XOPEN_SOURCE >= 500
 
 tcb *running;
@@ -186,8 +186,9 @@ void mbox_destroy(mbox **mb){
 }
 
 void mbox_deposit(mbox *mb, char *msg, int len){
-	messageNode* node = malloc(sizeof(messageNode*));
-	node->message = msg;
+	messageNode* node = malloc(sizeof(messageNode));
+	node->message = malloc(len);
+	strncpy(node->message,msg, len);
 	node->len = len;
 	node->sender = running->thread_id;
 	node->receiver = 0;
@@ -201,8 +202,9 @@ void mbox_withdraw(mbox *mb, char *msg, int *len){
 	messageNode* node = deq(&(mb->msg));
 	sem_signal(mb->mbox_sem);
 	if(node){
-		msg = node->message;
-		*len = node->len;
+		strncpy(msg,node->message, node->len);
+		msg[node->len] = '\0';
+		*len = node->len;		
 	}else{
 		msg = NULL;
 		*len = 0;
