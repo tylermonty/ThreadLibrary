@@ -163,6 +163,76 @@ void sem_destroy(sem_t **sp){
   free(*sp);
 }
 
+int mbox_create(mbox **mb){
+	*mb = malloc(sizeof(mbox*));
+	(*mb)->msg = NULL;
+	sem_init(&((*mb)->mbox_sem), 1);
+	return 0;
+}
+
+void mbox_destroy(mbox **mb){
+	sem_destroy(&((*mb)->mbox_sem));	
+  if((*mb)->msg){
+    messageNode *cur = (*mb)->msg;
+    while(cur){
+		messageNode *tmp = cur->next;
+     	free(cur->message);
+     	free(cur);
+		cur = tmp;
+    }
+  }
+  free((*mb)->msg);
+  free(*mb);
+}
+
+void mbox_deposit(mbox *mb, char *msg, int len){
+	messageNode* node = malloc(sizeof(messageNode*));
+	node->message = msg;
+	node->len = len;
+	node->sender = running->thread_id;
+	node->receiver = 0;
+	sem_wait(mb->mbox_sem);//lock binary sem to modify mailbox
+	mb->msg = enq(&(mb->msg), node);
+	sem_signal(mb->mbox_sem);//unlock when done
+}
+
+void mbox_withdraw(mbox *mb, char *msg, int *len){
+	sem_wait(mb->mbox_sem);
+	messageNode* node = deq(&(mb->msg));
+	sem_signal(mb->mbox_sem);
+	if(node){
+		msg = node->message;
+		*len = node->len;
+	}else{
+		msg = NULL;
+		*len = 0;
+	}
+}
+
+messageNode *enq(messageNode **queue, messageNode *node){
+  if (!*queue){ //if queue is empty, insert as first element
+    *queue = node;
+    node->next = NULL;
+  }else{ //find where to insert node based on priority
+  	messageNode *cur = *queue;
+  	while (cur->next)
+    	cur = cur->next;
+      //now cur->next is null
+      node->next = NULL;
+      cur->next = node;
+  }
+  return *queue;
+}
+
+messageNode *deq(messageNode **queue){ //dequeue first node in queue
+  messageNode *tmp = *queue;
+  if (*queue){//if any value in queue
+    *queue = (*queue)->next;//set head of queue to next node.
+    tmp->next = NULL;//no value to return so we return a null tcb*
+  }
+  return tmp;
+}
+
 /*
 void printList(t_queue *queue){ //print thread library list
   printf("Thread currently runing: %d\n", running->thread_id);
