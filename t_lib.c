@@ -6,6 +6,8 @@
 
 tcb *running;
 tcb *ready;
+mbox *mailbox;
+sem_t *msg_sem, *msg_sem2;
 
 void t_init() //initialize thread library
 {
@@ -171,7 +173,7 @@ int mbox_create(mbox **mb){
 }
 
 void mbox_destroy(mbox **mb){
-	sem_destroy(&((*mb)->mbox_sem));	
+	sem_destroy(&((*mb)->mbox_sem));
   if((*mb)->msg){
     messageNode *cur = (*mb)->msg;
     while(cur){
@@ -192,7 +194,11 @@ void mbox_deposit(mbox *mb, char *msg, int len){
 	node->len = len;
 	node->sender = running->thread_id;
 	node->receiver = 0;
-	sem_wait(mb->mbox_sem);//lock binary sem to modify mailbox
+  deposit_helper(mb, node);
+}
+
+void deposit_helper(mbox* mb, messageNode* node){
+  sem_wait(mb->mbox_sem);//lock binary sem to modify mailbox
 	mb->msg = enq(&(mb->msg), node);
 	sem_signal(mb->mbox_sem);//unlock when done
 }
@@ -204,7 +210,7 @@ void mbox_withdraw(mbox *mb, char *msg, int *len){
 	if(node){
 		strncpy(msg,node->message, node->len);
 		msg[node->len] = '\0';
-		*len = node->len;		
+		*len = node->len;
 	}else{
 		msg = NULL;
 		*len = 0;
@@ -233,6 +239,99 @@ messageNode *deq(messageNode **queue){ //dequeue first node in queue
     tmp->next = NULL;//no value to return so we return a null tcb*
   }
   return tmp;
+}
+
+void send(int tid, char *msg, int len){
+  if (!msg_sem){
+    sem_init(&msg_sem, 0);
+  }
+  if (!mailbox){
+    mbox_create(&mailbox);
+  }
+  messageNode* node = malloc(sizeof(messageNode));
+	node->message = malloc(len);
+	strncpy(node->message,msg, len);
+	node->len = len;
+	node->sender = running->thread_id;
+	node->receiver = tid;
+  deposit_helper(mailbox, node);
+  sem_signal(msg_sem);
+}
+
+void receive(int *tid, char *msg, int *len){
+  if (!msg_sem){
+    sem_init(&msg_sem, 0);
+  }
+  if (!mailbox){
+    mbox_create(&mailbox);
+  }
+  sem_wait(msg_sem);
+  messageNode *mnode;
+  if(*tid == 0){
+    sem_wait(mailbox->mbox_sem);
+    mnode = deq(&(mailbox->msg));
+    sem_signal(mailbox->mbox_sem);
+    if(mnode){
+      strcpy(msg, mnode->message);
+      *tid = mnode->sender;
+      *len = mnode->len;
+    }
+  }
+  else{
+    mnode = mailbox->msg;
+    messageNode *prev;
+    prev = NULL;
+    while (mnode){
+      if (mnode->sender == *tid){
+        sem_wait(mailbox->mbox_sem);
+        messageNode *tmp;
+        if (mnode == mailbox->msg){
+          tmp = deq(&(mailbox->msg));
+        }
+        else{
+          tmp = deq(&mnode);
+        }
+        if (prev){
+          prev->next = mnode;
+        }
+        sem_signal(mailbox->mbox_sem);
+        strcpy(msg, tmp->message);
+        *tid = tmp->sender;
+        *len = tmp->len;
+        free(tmp->message);
+        free(tmp);
+        break;
+      }
+      prev = mnode;
+      mnode = mnode->next;
+    }
+  }
+  sem_signal(msg_sem);
+}
+
+
+void block_send(int tid, char *msg, int length){
+  if (!msg_sem2){
+    sem_init(&msg_sem2, 0);
+  }
+  if (!msg_sem){
+    sem_init(&msg_sem, 0);
+  }
+  send(tid, msg, length);
+  //sem_signal(msg_sem);
+  sem_wait(msg_sem2);
+}
+
+void block_receive(int *tid, char *msg, int *length){
+  if (!msg_sem2){
+    sem_init(&msg_sem2, 0);
+  }
+  if (!msg_sem){
+    sem_init(&msg_sem, 0);
+  }
+  //sem_wait(msg_sem);
+  receive(tid, msg, length);
+  sem_signal(msg_sem2);
 }
 
 /*
