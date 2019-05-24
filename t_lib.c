@@ -314,9 +314,6 @@ void block_send(int tid, char *msg, int length){
   if (!msg_sem2){
     sem_init(&msg_sem2, 0);
   }
-  if (!msg_sem){
-    sem_init(&msg_sem, 0);
-  }
   send(tid, msg, length);
   //sem_signal(msg_sem);
   sem_wait(msg_sem2);
@@ -325,9 +322,6 @@ void block_send(int tid, char *msg, int length){
 void block_receive(int *tid, char *msg, int *length){
   if (!msg_sem2){
     sem_init(&msg_sem2, 0);
-  }
-  if (!msg_sem){
-    sem_init(&msg_sem, 0);
   }
   //sem_wait(msg_sem);
   receive(tid, msg, length);
